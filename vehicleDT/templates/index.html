@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | combined</title>
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='TemplateData_speedometer/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='TemplateData_speedometer/style.css') }}">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='TemplateData_comm/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='TemplateData_comm/style.css') }}">
+
+
+
+
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.9.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,200,1,200">
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;1,300&display=swap"
+        rel="stylesheet">
+
+
+
+
+
+
+    <style>
+        body {
+            background-color: #f4f3ef;
+            /* margin: 0;
+                  padding: 0;
+                  font-family: Arial, sans-serif;
+                  height: 100vh;
+                  display: flex;
+                  flex-direction: column; */
+        }
+
+        .bottom-div {
+            background-color: lightcoral;
+            color: white;
+            padding: 10px 10px;
+            /* Reduced vertical padding */
+            border-radius: 20px;
+            /* Make all sides rounded */
+            position: sticky;
+            bottom: 0;
+            left: 20px;
+            /* Adjust margin left */
+            right: 20px;
+            /* Adjust margin right */
+            margin-bottom: 20px;
+            /* Adjust margin bottom */
+            display: flex;
+            align-items: center;
+            /* Center items along the vertical axis */
+        }
+
+        .play-pause-button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+            font-family: 'Material Symbols Rounded';
+            font-size: 48px;
+            /* You can adjust the size as needed */
+            /* color: lightblue; Change color to light blue */
+            transition: color 0.3s ease;
+            /* Add transition for color change */
+            margin-right: 10px;
+            /* Add some spacing between the button and text */
+        }
+
+        .play-pause-button:focus {
+            outline: none;
+        }
+
+        .range {
+            width: 90%;
+            /* Adjust the width as needed */
+            margin-left: 5px;
+            margin-right: 10px;
+        }
+
+        .colum {
+            margin: 15px;
+            padding: 15px;
+            padding-top: 0px;
+            border-radius: 12px;
+            box-shadow: 0 6px 10px -4px rgba(0, 0, 0, .15);
+            font-family: Montserrat, Helvetica Neue, Arial, sans-serif;
+            background-color: #fff;
+            color: #252422;
+        }
+
+        .card-header {
+            padding: 15px 15px 0;
+            margin-bottom: 30px;
+        }
+
+        .card-title {
+            display: inline;
+        }
+
+        .card-units {
+            color: #9a9a9a;
+        }
+
+        .card-category {
+            font-size: 1em;
+            color: #9a9a9a;
+        }
+
+        .card-body {
+            margin-bottom: 50px;
+        }
+    </style>
+
+
+
+
+
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- location -->
+        <div class="row">
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">Location Tracker</h5>
+                </div>
+
+                <div class="card-body">
+                    <div id="map" style="width: 100%; height: 450px"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <!-- cool -->
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">Engine coolant temperature (C)</h5>
+                    <h2 class="card-title" id="cool-val"></h2>
+                </div>
+
+                <div class="card-body">
+                    <canvas id="cool"></canvas>
+                </div>
+            </div>
+
+            <!-- press -->
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">Barometric pressure (kPa)</h5>
+                    <h2 class="card-title" id="baro-val"></h2>
+                </div>
+
+                <div class="card-body">
+                    <canvas id="baro"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- speedometer -->
+        <div class="row">
+            <div class="col colum">
+                <div id="unity-container2" class="unity-desktop2">
+                    <canvas id="unity-canvas2" width=960 height=600 tabindex="-1"></canvas>
+                    <div id="unity-loading-bar2">
+                        <div id="unity-logo2"></div>
+                        <div id="unity-progress-bar-empty2">
+                            <div id="unity-progress-bar-full2"></div>
+                        </div>
+                    </div>
+                    <div id="unity-warning2"> </div>
+                    <div id="unity-footer2">
+                        <div id="unity-webgl-logo2"></div>
+                        <div id="unity-fullscreen-button2"></div>
+                        <div id="unity-build-title2">speedometer2</div>
+                    </div>
+                </div>
+                <button onclick="unityGame2.SendMessage('GameManager', 'setSpeed', 20.0)">set speed</button>
+                <button onclick="unityGame2.SendMessage('GameManager', 'setCool', 80)">set cool</button>
+                <button onclick="unityGame2.SendMessage('GameManager', 'setRpm', 3)">set rpm</button>
+            </div>
+        </div>
+
+
+
+        <div class="row">
+            <div id="values"></div>
+            <!-- speed chart -->
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">Speed</h5>
+                    <h2 class="card-title" id="speed-val"></h2> <span class="card-units">km/h</span>
+                </div>
+
+                <div class="card-body">
+                    <canvas id="speed"></canvas>
+                </div>
+            </div>
+
+            <!-- rpm chart -->
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">RPM</h5>
+                    <h2 class="card-title" id="rpm-val"></h2>
+                </div>
+
+                <div class="card-body">
+                    <canvas id="rpm"></canvas>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col colum">
+                <!-- comm -->
+                <div id="unity-container1" class="unity-desktop1">
+                    <canvas id="unity-canvas1" width=960 height=600 tabindex="-1"></canvas>
+                    <div id="unity-loading-bar1">
+                        <div id="unity-logo1"></div>
+                        <div id="unity-progress-bar-empty1">
+                            <div id="unity-progress-bar-full1"></div>
+                        </div>
+                    </div>
+                    <div id="unity-warning1"> </div>
+                    <div id="unity-footer1">
+                        <div id="unity-webgl-logo1"></div>
+                        <div id="unity-fullscreen-button1"></div>
+                        <div id="unity-build-title1">comm3</div>
+                    </div>
+                </div>
+                <button onclick="unityGame1.SendMessage('CarController', 'setSpeed', 0.3)">speed</button>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col colum">
+                <div class="card-header container">
+                    <h5 class="card-category">Catalyst temperature</h5>
+                    <h2 class="card-title" id="cat-val"></h2>
+                </div>
+
+                <div class="card-body">
+                    <canvas id="cat"></canvas>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <div class="bottom-div" data-theme="nord">
+        <button class="play-pause-button" id="playPauseButton" onclick="togglePlayPause()">
+            <span id="icon">&#xe037;</span>
+        </button>
+
+        <input type="range" min="0" max="{{rows}}" value="0" class="range" id="slider" />
+        <h4 id="sliderValue">{{start_time}}/{{end_time}}</h4>
+    </div>
+
+
+
+
+    <!-- --------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------- -->
+
+    <!-- speedometer -->
+    <script>
+
+        var container2 = document.querySelector("#unity-container2");
+        var canvas2 = document.querySelector("#unity-canvas2");
+        var loadingBar2 = document.querySelector("#unity-loading-bar2");
+        var progressBarFull2 = document.querySelector("#unity-progress-bar-full2");
+        var fullscreenButton2 = document.querySelector("#unity-fullscreen-button2");
+        var warningBanner2 = document.querySelector("#unity-warning2");
+
+        // Shows a temporary message banner/ribbon for a few seconds, or
+        // a permanent error message on top of the canvas if type=='error'.
+        // If type=='warning', a yellow highlight color is used.
+        // Modify or remove this function to customize the visually presented
+        // way that non-critical warnings and error messages are presented to the
+        // user.
+        function unityShowBanner2(msg, type) {
+            function updateBannerVisibility2() {
+                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+            }
+            var div = document.createElement('div');
+            div.innerHTML = msg;
+            warningBanner.appendChild(div);
+            if (type == 'error') div.style = 'background: red; padding: 10px;';
+            else {
+                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+                setTimeout(function () {
+                    warningBanner.removeChild(div);
+                    updateBannerVisibility2();
+                }, 5000);
+            }
+            updateBannerVisibility2();
+        }
+
+        var buildUrl2 = "static/Build_speedometer";
+        var loaderUrl2 = buildUrl2 + "/speedometer1_webgl.loader.js";
+        var config2 = {
+            dataUrl: buildUrl2 + "/speedometer1_webgl.data",
+            frameworkUrl: buildUrl2 + "/speedometer1_webgl.framework.js",
+            codeUrl: buildUrl2 + "/speedometer1_webgl.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany",
+            productName: "comm3",
+            productVersion: "0.1",
+            showBanner: unityShowBanner2,
+        };
+
+        // By default, Unity keeps WebGL canvas render target size matched with
+        // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+        // Set this to false if you want to decouple this synchronization from
+        // happening inside the engine, and you would instead like to size up
+        // the canvas DOM size and WebGL render target sizes yourself.
+        // config2.matchWebGLToCanvasSize = false;
+
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            // Mobile device style: fill the whole browser client area with the game canvas:
+
+            var meta2 = document.createElement('meta');
+            meta2.name = 'viewport';
+            meta2.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            container.className = "unity-mobile";
+            canvas2.className = "unity-mobile";
+
+            // To lower canvas resolution on mobile devices to gain some
+            // performance, uncomment the following line:
+            // config.devicePixelRatio = 1;
+
+
+        } else {
+            // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+            canvas2.style.width = "960px";
+            canvas2.style.height = "600px";
+        }
+
+        loadingBar2.style.display = "block";
+
+        var unityGame2;// declare
+
+        var script2 = document.createElement("script");
+        script2.src = loaderUrl2;
+        script2.onload = () => {
+            createUnityInstance(canvas2, config2, (progress) => {
+                progressBarFull2.style.width = 100 * progress + "%";
+            }).then((unityInstance) => {
+                unityGame2 = unityInstance; //Assign unityInstance to your declare variable
+                loadingBar2.style.display = "none";
+                fullscreenButton2.onclick = () => {
+                    unityInstance.SetFullscreen(2);
+                };
+            }).catch((message) => {
+                alert(message);
+            });
+        };
+
+        document.body.appendChild(script2);
+
+    </script>
+
+
+
+    <!-- comm -->
+    <script>
+
+        var container1 = document.querySelector("#unity-container1");
+        var canvas1 = document.querySelector("#unity-canvas1");
+        var loadingBar1 = document.querySelector("#unity-loading-bar1");
+        var progressBarFull1 = document.querySelector("#unity-progress-bar-full1");
+        var fullscreenButton1 = document.querySelector("#unity-fullscreen-button1");
+        var warningBanner1 = document.querySelector("#unity-warning1");
+
+        // Shows a temporary message banner/ribbon for a few seconds, or
+        // a permanent error message on top of the canvas if type=='error'.
+        // If type=='warning', a yellow highlight color is used.
+        // Modify or remove this function to customize the visually presented
+        // way that non-critical warnings and error messages are presented to the
+        // user.
+        function unityShowBanner1(msg, type) {
+            function updateBannerVisibility1() {
+                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+            }
+            var div = document.createElement('div');
+            div.innerHTML = msg;
+            warningBanner.appendChild(div);
+            if (type == 'error') div.style = 'background: red; padding: 10px;';
+            else {
+                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+                setTimeout(function () {
+                    warningBanner.removeChild(div);
+                    updateBannerVisibility1();
+                }, 5000);
+            }
+            updateBannerVisibility1();
+        }
+
+        var buildUrl1 = "static/Build_comm";
+        var loaderUrl1 = buildUrl1 + "/comm4_webgl2.loader.js";
+        var config1 = {
+            dataUrl: buildUrl1 + "/comm4_webgl2.data",
+            frameworkUrl: buildUrl1 + "/comm4_webgl2.framework.js",
+            codeUrl: buildUrl1 + "/comm4_webgl2.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany",
+            productName: "comm3",
+            productVersion: "0.1",
+            showBanner: unityShowBanner1,
+        };
+
+        // By default, Unity keeps WebGL canvas render target size matched with
+        // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+        // Set this to false if you want to decouple this synchronization from
+        // happening inside the engine, and you would instead like to size up
+        // the canvas DOM size and WebGL render target sizes yourself.
+        // config1.matchWebGLToCanvasSize = false;
+
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            // Mobile device style: fill the whole browser client area with the game canvas:
+
+            var meta1 = document.createElement('meta');
+            meta1.name = 'viewport';
+            meta1.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            container.className = "unity-mobile";
+            canvas1.className = "unity-mobile";
+
+            // To lower canvas resolution on mobile devices to gain some
+            // performance, uncomment the following line:
+            // config.devicePixelRatio = 1;
+
+
+        } else {
+            // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+            canvas1.style.width = "960px";
+            canvas1.style.height = "600px";
+        }
+
+        loadingBar1.style.display = "block";
+
+        var unityGame1;// declare
+
+        var script1 = document.createElement("script");
+        script1.src = loaderUrl1;
+        script1.onload = () => {
+            createUnityInstance(canvas1, config1, (progress) => {
+                progressBarFull1.style.width = 100 * progress + "%";
+            }).then((unityInstance) => {
+                unityGame1 = unityInstance; //Assign unityInstance to your declare variable
+                loadingBar1.style.display = "none";
+                fullscreenButton1.onclick = () => {
+                    unityInstance.SetFullscreen(1);
+                };
+                // Send message to CarController after Unity instance is fully loaded
+                unityInstance.SendMessage("CarController", "setSpeed", 0.0);
+            }).catch((message) => {
+                alert(message);
+            });
+        };
+
+        document.body.appendChild(script1);
+
+    </script>
+
+
+
+
+
+    <script>
+        var speed = document.getElementById('speed').getContext('2d');
+        var rpm = document.getElementById('rpm').getContext('2d');
+        var baro = document.getElementById('baro').getContext('2d');
+        var cool = document.getElementById('cool').getContext('2d');
+        var cat = document.getElementById('cat').getContext('2d');
+
+        var speed_val = document.getElementById('speed-val');
+        var rpm_val = document.getElementById('rpm-val');
+        var baro_val = document.getElementById('baro-val');
+        var cool_val = document.getElementById('cool-val');
+        var cat_val = document.getElementById('cat-val');
+
+        var iconElement = document.getElementById('icon');
+        var slider = document.getElementById('slider');
+        var sliderValue = document.getElementById('sliderValue');
+    </script>
+
+
+    <script>
+        // var mapOptions = {
+        //     center: [12.883478, 77.547894],
+        //     zoom: 18
+        // }
+
+        var map = new L.map('map');
+
+        var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        map.addLayer(layer);
+
+        var marker = new L.Marker([12.883478, 77.547894]);
+        marker.addTo(map);
+
+        polyline = L.polyline([], { color: 'red' }).addTo(map);
+    </script>
+
+
+    <script>
+        var socketio = io();
+
+        speed = new Chart(speed, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: [],
+                    borderColor: [],
+                    fill: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+
+
+        rpm = new Chart(rpm, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    fill: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+
+
+        baro = new Chart(baro, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    fill: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+
+
+        cool = new Chart(cool, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    fill: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+
+
+        cat = new Chart(cat, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Values',
+                    data: [],
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    fill: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+
+
+
+
+    <script>
+
+        function ins(chart, chart_val, time, data) {
+            chart_val.innerHTML = data;
+
+            chart.data.labels.push(time);
+            chart.data.datasets[0].data.push(data);
+            chart.update();
+        }
+
+        function ins_color(chart, is_err) {
+            console.log(is_err)
+            if (is_err == 0) {
+                chart.data.datasets[0].backgroundColor.push("rgba(119,221,119,1)");
+                chart.data.datasets[0].borderColor.push("rgba(119,221,119,1)");
+            }
+            else {
+                chart.data.datasets[0].backgroundColor.push("rgba(255,8,0,1)");
+                chart.data.datasets[0].borderColor.push("rgba(255,8,0,1)");
+            }
+        }
+
+        function rmd(chart) {
+            chart.data.labels.splice(0, 1);
+            chart.data.datasets[0].data.splice(0, 1);
+        }
+
+        function rmd_color(chart) {
+            chart.data.datasets[0].backgroundColor.splice(0, 1);
+            chart.data.datasets[0].borderColor.splice(0, 1);
+        }
+
+        function seek(chart, chart_val, time, data) {
+            chart_val.innerHTML = data[data.length - 1];
+            chart.data.labels = time
+            chart.data.datasets[0].data = data
+            chart.update();
+        }
+    </script>
+
+
+
+
+    <script>
+        const MAX_DATA_COUNT = 10;
+        socketio.on("message", (data) => {
+            console.log(data)
+            console.log(data.speed)
+            document.getElementById('values').innerHTML = data.time + " , " + data.speed + " , " + data.rpm;
+            console.log(data)
+
+            polyline.addLatLng(data.latlong);
+            map.fitBounds(polyline.getBounds());
+
+            if (speed.data.labels.length > MAX_DATA_COUNT) {
+                rmd_color(speed);
+                rmd(speed);
+            }
+            if (data.speed !== undefined) {
+                unityGame1.SendMessage('CarController', 'setSpeed', data.speed)
+                unityGame2.SendMessage('GameManager', 'setSpeed', data.speed)
+                ins_color(speed, data.speed_err)
+                ins(speed, speed_val, data.time, data.speed);
+            }
+
+
+            if (rpm.data.labels.length > MAX_DATA_COUNT) {
+                // rmd_color(rpm);
+                rmd(rpm);
+            }
+            if (data.rpm !== undefined) {
+                unityGame2.SendMessage('GameManager', 'setRpm', data.rpm / 1000)
+                // ins_color(rpm, data.rpm_err)
+                ins(rpm, rpm_val, data.time, data.rpm);
+            }
+
+
+            if (baro.data.labels.length > MAX_DATA_COUNT) {
+                rmd(baro);
+            }
+            if (data.baro !== undefined) {
+                ins(baro, baro_val, data.time, data.baro);
+            }
+
+
+            if (cool.data.labels.length > MAX_DATA_COUNT) {
+                rmd(cool);
+            }
+            if (data.cool !== undefined) {
+                unityGame2.SendMessage('GameManager', 'setCool', data.cool)
+                ins(cool, cool_val, data.time, data.cool);
+            }
+
+            if (cat.data.labels.length > MAX_DATA_COUNT) {
+                rmd(cat);
+            }
+            if (data.cat !== undefined) {
+                ins(cat, cat_val, data.time, data.cat);
+            }
+
+
+            slider.value = parseInt(slider.value) + 1;
+            sliderValue.textContent = data.time + "/{{end_time}}";
+        });
+    </script>
+
+
+
+
+    <script>
+        let isPlaying = false;
+
+        function togglePlayPause() {
+
+            isPlaying = !isPlaying;
+
+            if (isPlaying) {
+                iconElement.innerHTML = '&#xe034;';
+                socketio.emit("play", { 'play': 'start stream...', 'index': slider.value });
+                console.log("play");
+            } else {
+                iconElement.innerHTML = '&#xe037;';
+                socketio.emit("pause", { 'pause': 'pause stream...' });
+                unityGame1.SendMessage('CarController', 'setSpeed', 0.0)
+                console.log("pause");
+            }
+        }
+
+        slider.addEventListener('mouseup', function () {
+            iconElement.innerHTML = '&#xe037;';
+            socketio.emit("sliderSync", { 'index': this.value })
+            // sliderValue.textContent = this.value + "/{{end_time}}";
+        });
+    </script>
+
+
+
+
+    <script>
+        socketio.on("sliderSync", (data) => {
+            document.getElementById('values').innerHTML = data.speed + " , " + data.rpm
+            sliderValue.textContent = data.time + "/{{end_time}}";
+
+            polyline.setLatLngs(data.latlong);
+            map.fitBounds(polyline.getBounds());
+
+            seek(speed, speed_val, data.speed[0], data.speed[1])
+            unityGame1.SendMessage('CarController', 'setSpeed', data.speed[1][data.speed[1].length - 1])
+            unityGame2.SendMessage('GameManager', 'setSpeed', data.speed[1][data.speed[1].length - 1])
+            // speed.data.labels = data.speed[0]
+            // speed.data.datasets[0].data = data.speed[1]
+            // speed.update();
+
+            seek(rpm, rpm_val, data.rpm[0], data.rpm[1])
+            unityGame2.SendMessage('GameManager', 'setRpm', (data.rpm[1][data.rpm[1].length - 1]) / 1000)
+            // rpm.data.labels = data.rpm[0]
+            // rpm.data.datasets[0].data = data.rpm[1]
+            // rpm.update();
+
+            seek(baro, baro_val, data.baro[0], data.baro[1])
+            // baro.data.labels = data.baro[0]
+            // baro.data.datasets[0].data = data.baro[1]
+            // baro.update();
+
+            seek(cool, cool_val, data.cool[0], data.cool[1])
+            unityGame2.SendMessage('GameManager', 'setCool', data.cool[1][data.cool[1].length - 1])
+            // baro.data.labels = data.baro[0]
+            // baro.data.datasets[0].data = data.baro[1]
+            // baro.update();
+
+            seek(cat, cat_val, data.cat[0], data.cat[1])
+            // baro.data.labels = data.baro[0]
+            // baro.data.datasets[0].data = data.baro[1]
+            // baro.update();
+        });
+    </script>
+
+
+
+
+</body>
+
+</html>
